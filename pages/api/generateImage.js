@@ -1,15 +1,16 @@
 import { ImageResponse } from '@vercel/og';
 
 export const config = {
-  runtime: 'edge',
+  api: {
+    responseLimit: false,
+  },
 };
 
-export default function handler(req) {
+export default async function handler(req, res) {
   try {
-    const { searchParams } = new URL(req.url);
-    const text = searchParams.get('text');
+    const { text } = req.query;
 
-    return new ImageResponse(
+    const imageResponse = new ImageResponse(
       (
         <div
           style={{
@@ -46,10 +47,14 @@ export default function handler(req) {
         height: 630,
       },
     );
+
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    res.status(200);
+
+    imageResponse.body.pipe(res);
   } catch (e) {
     console.log(`${e.message}`);
-    return new Response(`Failed to generate the image`, {
-      status: 500,
-    });
+    res.status(500).send('Failed to generate the image');
   }
 }
