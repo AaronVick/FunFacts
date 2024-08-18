@@ -1,14 +1,17 @@
 import { ImageResponse } from '@vercel/og';
 
 export const config = {
-  api: {
-    responseLimit: false,
-  },
+  runtime: 'edge',
 };
 
-export default async function handler(req, res) {
+export default async function handler(req) {
   try {
-    const { text } = req.query;
+    const { searchParams } = new URL(req.url);
+    const text = searchParams.get('text');
+
+    if (!text) {
+      return new Response('Missing text parameter', { status: 400 });
+    }
 
     const imageResponse = new ImageResponse(
       (
@@ -28,7 +31,7 @@ export default async function handler(req, res) {
         >
           <div
             style={{
-              fontSize: 60,
+              fontSize: 40,
               fontStyle: 'normal',
               letterSpacing: '-0.025em',
               color: 'black',
@@ -45,16 +48,12 @@ export default async function handler(req, res) {
       {
         width: 1200,
         height: 630,
-      },
+      }
     );
 
-    res.setHeader('Content-Type', 'image/png');
-    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-    res.status(200);
-
-    imageResponse.body.pipe(res);
+    return imageResponse;
   } catch (e) {
-    console.log(`${e.message}`);
-    res.status(500).send('Failed to generate the image');
+    console.error('Error generating image:', e);
+    return new Response(`Failed to generate image: ${e.message}`, { status: 500 });
   }
 }
