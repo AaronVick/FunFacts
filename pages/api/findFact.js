@@ -34,7 +34,7 @@ function getRandomPlaceholderImage() {
   return placeholderImages[Math.floor(Math.random() * placeholderImages.length)];
 }
 
-export default async function handler(req, res) {
+export default async function handler(req) {
   if (req.method === 'POST') {
     try {
       console.log('Received POST request to /api/findFact');
@@ -46,40 +46,13 @@ export default async function handler(req, res) {
 
         const backgroundColor = getRandomDarkColor();
 
-        const imageResponse = new ImageResponse(
-          (
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                width: '100%',
-                height: '100%',
-                backgroundColor,
-                color: '#fff',
-                fontFamily: 'Arial, sans-serif',
-                fontSize: '48px',
-                padding: '40px',
-                textAlign: 'center',
-              }}
-            >
-              {fact}
-            </div>
-          ),
-          {
-            width: 1200,
-            height: 630, // Farcaster's 1.91:1 aspect ratio
-          }
-        );
-
         const ogImageUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/api/findFact?${new URLSearchParams({
           fact,
           color: backgroundColor,
         }).toString()}`;
 
-        res.setHeader('Content-Type', 'text/html');
-        res.status(200).send(`
-          <!DOCTYPE html>
+        return new Response(
+          `<!DOCTYPE html>
           <html>
             <head>
               <title>Random Fun Fact</title>
@@ -95,8 +68,13 @@ export default async function handler(req, res) {
               <h1>Fun Fact</h1>
               <p>Here’s your random fun fact: "${fact}"</p>
             </body>
-          </html>
-        `);
+          </html>`,
+          {
+            headers: {
+              'Content-Type': 'text/html',
+            },
+          }
+        );
       } else {
         throw new Error('Failed to fetch a valid fact');
       }
@@ -107,9 +85,8 @@ export default async function handler(req, res) {
       const placeholderImage = getRandomPlaceholderImage();
       const ogImageUrl = placeholderImage;
 
-      res.setHeader('Content-Type', 'text/html');
-      res.status(200).send(`
-        <!DOCTYPE html>
+      return new Response(
+        `<!DOCTYPE html>
         <html>
           <head>
             <title>Error</title>
@@ -126,13 +103,17 @@ export default async function handler(req, res) {
             <p>An unexpected error occurred. Here’s a fun image instead!</p>
             <img src="${ogImageUrl}" alt="Placeholder Image" style="max-width: 100%; height: auto;" />
           </body>
-        </html>
-      `);
+        </html>`,
+        {
+          headers: {
+            'Content-Type': 'text/html',
+          },
+        }
+      );
     }
   } else {
-    res.setHeader('Content-Type', 'text/html');
-    res.status(405).send(`
-      <!DOCTYPE html>
+    return new Response(
+      `<!DOCTYPE html>
       <html>
         <head>
           <title>Method Not Allowed</title>
@@ -145,7 +126,12 @@ export default async function handler(req, res) {
           <h1>Method Not Allowed</h1>
           <p>This endpoint only accepts POST requests.</p>
         </body>
-      </html>
-    `);
+      </html>`,
+      {
+        headers: {
+          'Content-Type': 'text/html',
+        },
+      }
+    );
   }
 }
