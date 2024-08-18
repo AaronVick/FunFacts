@@ -1,5 +1,9 @@
 import axios from 'axios';
 
+export const config = {
+  runtime: 'edge',
+};
+
 const FACT_API = 'https://uselessfacts.jsph.pl/random.json?language=en';
 const OG_IMAGE_API = `https://funfacts-xi.vercel.app/api/generateImage`;
 
@@ -17,10 +21,9 @@ async function fetchRandomFact() {
   }
 }
 
-export default async function handler(req, res) {
+export default async function handler(req) {
   console.log('Received request to /api/findFact');
   console.log('Request method:', req.method);
-  console.log('OG_IMAGE_API:', OG_IMAGE_API);
 
   if (req.method === 'POST') {
     try {
@@ -37,8 +40,18 @@ export default async function handler(req, res) {
         
         console.log('Generated OG Image URL:', ogImageUrl);
 
-        res.setHeader('Content-Type', 'text/html');
-        res.status(200).send(`
+        // Verify if the image can be generated
+        const imageResponse = await fetch(ogImageUrl);
+        if (!imageResponse.ok) {
+          throw new Error(`Failed to generate image: ${imageResponse.statusText}`);
+        }
+
+        const shareText = encodeURIComponent("Take a moment from the grind and read some fun facts.\n\nFrame by @aaronv.eth");
+        const shareUrl = encodeURIComponent("https://funfacts-xi.vercel.app/");
+        const shareLink = `https://warpcast.com/~/compose?text=${shareText}&embeds[]=${shareUrl}`;
+
+        return new Response(
+          `
           <!DOCTYPE html>
           <html>
             <head>
@@ -49,38 +62,28 @@ export default async function handler(req, res) {
               <meta property="fc:frame:post_url" content="https://funfacts-xi.vercel.app/api/findFact" />
               <meta property="fc:frame:button:2" content="Share" />
               <meta property="fc:frame:button:2:action" content="link" />
-              <meta property="fc:frame:button:2:target" content="https://warpcast.com/~/compose?text=${encodeURIComponent(`Did you know? ${fact}\n\nLearn more fun facts at https://funfacts-xi.vercel.app`)}" />
+              <meta property="fc:frame:button:2:target" content="${shareLink}" />
             </head>
             <body>
               <h1>Fun Fact</h1>
               <p>${fact}</p>
             </body>
           </html>
-        `);
+        `,
+          {
+            status: 200,
+            headers: {
+              'Content-Type': 'text/html',
+            },
+          }
+        );
       } else {
-        console.log('Failed to fetch a random fact');
-        res.setHeader('Content-Type', 'text/html');
-        res.status(200).send(`
-          <!DOCTYPE html>
-          <html>
-            <head>
-              <title>Error</title>
-              <meta property="fc:frame" content="vNext" />
-              <meta property="fc:frame:image" content="https://funfacts-xi.vercel.app/error.png" />
-              <meta property="fc:frame:button:1" content="Try Again" />
-              <meta property="fc:frame:post_url" content="https://funfacts-xi.vercel.app/api/findFact" />
-            </head>
-            <body>
-              <h1>Error</h1>
-              <p>Sorry, we couldn't fetch a fun fact. Please try again!</p>
-            </body>
-          </html>
-        `);
+        throw new Error('Failed to fetch a random fact');
       }
     } catch (error) {
       console.error('Error in findFact handler:', error);
-      res.setHeader('Content-Type', 'text/html');
-      res.status(200).send(`
+      return new Response(
+        `
         <!DOCTYPE html>
         <html>
           <head>
@@ -95,11 +98,18 @@ export default async function handler(req, res) {
             <p>An unexpected error occurred. Please try again!</p>
           </body>
         </html>
-      `);
+      `,
+        {
+          status: 200,
+          headers: {
+            'Content-Type': 'text/html',
+          },
+        }
+      );
     }
   } else {
-    res.setHeader('Content-Type', 'text/html');
-    res.status(405).send(`
+    return new Response(
+      `
       <!DOCTYPE html>
       <html>
         <head>
@@ -114,6 +124,13 @@ export default async function handler(req, res) {
           <p>This endpoint only accepts POST requests.</p>
         </body>
       </html>
-    `);
+    `,
+      {
+        status: 405,
+        headers: {
+          'Content-Type': 'text/html',
+        },
+      }
+    );
   }
 }
