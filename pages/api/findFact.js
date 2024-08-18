@@ -21,7 +21,7 @@ async function fetchRandomFact() {
   }
 }
 
-export default async function handler(req, res) {
+export default async function handler(req) {
   if (req.method === 'POST') {
     try {
       console.log('Received POST request to /api/findFact');
@@ -35,8 +35,8 @@ export default async function handler(req, res) {
 
         console.log('Generated OG Image URL:', ogImageUrl);
 
-        res.setHeader('Content-Type', 'text/html');
-        res.status(200).send(`
+        return new Response(
+          `
           <!DOCTYPE html>
           <html>
             <head>
@@ -44,22 +44,28 @@ export default async function handler(req, res) {
               <meta property="fc:frame" content="vNext" />
               <meta property="fc:frame:image" content="${ogImageUrl}" />
               <meta property="fc:frame:button:1" content="Find Another" />
-              <meta property="fc:frame:button:1:action" content="post" />
-              <meta property="fc:frame:button:2" content="Share" />
-              <meta property="fc:frame:button:2:action" content="compose" />
-              <meta property="fc:frame:button:2:target" content="Enjoy some random fun facts. Frame by @aaronv.eth" />
               <meta property="fc:frame:post_url" content="${process.env.NEXT_PUBLIC_BASE_URL}/api/findFact" />
+              <meta property="fc:frame:button:2" content="Share" />
+              <meta property="fc:frame:button:2:action" content="link" />
+              <meta property="fc:frame:button:2:target" content="https://warpcast.com/~/compose?text=I%20just%20learned%20this%20fun%20fact%3A%20${encodeURIComponent(fact)}%0A%0ALearn%20more%20fun%20facts%20at%20https%3A%2F%2Ffunfacts-xi.vercel.app%2F" />
             </head>
             <body>
               <h1>Fun Fact</h1>
               <p>${fact}</p>
             </body>
           </html>
-        `);
+        `,
+          {
+            status: 200,
+            headers: {
+              'Content-Type': 'text/html',
+            },
+          }
+        );
       } else {
         console.log('Failed to fetch a fun fact');
-        res.setHeader('Content-Type', 'text/html');
-        res.status(200).send(`
+        return new Response(
+          `
           <!DOCTYPE html>
           <html>
             <head>
@@ -67,7 +73,6 @@ export default async function handler(req, res) {
               <meta property="fc:frame" content="vNext" />
               <meta property="fc:frame:image" content="${process.env.NEXT_PUBLIC_BASE_URL}/error.png" />
               <meta property="fc:frame:button:1" content="Try Again" />
-              <meta property="fc:frame:button:1:action" content="post" />
               <meta property="fc:frame:post_url" content="${process.env.NEXT_PUBLIC_BASE_URL}/api/findFact" />
             </head>
             <body>
@@ -75,12 +80,19 @@ export default async function handler(req, res) {
               <p>Sorry, we couldn't fetch a fun fact. Please try again!</p>
             </body>
           </html>
-        `);
+        `,
+          {
+            status: 200,
+            headers: {
+              'Content-Type': 'text/html',
+            },
+          }
+        );
       }
     } catch (error) {
       console.error('Error in findFact handler:', error);
-      res.setHeader('Content-Type', 'text/html');
-      res.status(200).send(`
+      return new Response(
+        `
         <!DOCTYPE html>
         <html>
           <head>
@@ -88,7 +100,6 @@ export default async function handler(req, res) {
             <meta property="fc:frame" content="vNext" />
             <meta property="fc:frame:image" content="${process.env.NEXT_PUBLIC_BASE_URL}/error.png" />
             <meta property="fc:frame:button:1" content="Try Again" />
-            <meta property="fc:frame:button:1:action" content="post" />
             <meta property="fc:frame:post_url" content="${process.env.NEXT_PUBLIC_BASE_URL}/api/findFact" />
           </head>
           <body>
@@ -96,11 +107,18 @@ export default async function handler(req, res) {
             <p>An unexpected error occurred. Please try again!</p>
           </body>
         </html>
-      `);
+      `,
+        {
+          status: 200,
+          headers: {
+            'Content-Type': 'text/html',
+          },
+        }
+      );
     }
   } else {
-    res.setHeader('Content-Type', 'text/html');
-    res.status(405).send(`
+    return new Response(
+      `
       <!DOCTYPE html>
       <html>
         <head>
@@ -108,7 +126,6 @@ export default async function handler(req, res) {
           <meta property="fc:frame" content="vNext" />
           <meta property="fc:frame:image" content="${process.env.NEXT_PUBLIC_BASE_URL}/error.png" />
           <meta property="fc:frame:button:1" content="Go Back" />
-          <meta property="fc:frame:button:1:action" content="post" />
           <meta property="fc:frame:post_url" content="${process.env.NEXT_PUBLIC_BASE_URL}/api/findFact" />
         </head>
         <body>
@@ -116,6 +133,13 @@ export default async function handler(req, res) {
           <p>This endpoint only accepts POST requests.</p>
         </body>
       </html>
-    `);
+    `,
+      {
+        status: 405,
+        headers: {
+          'Content-Type': 'text/html',
+        },
+      }
+    );
   }
 }
