@@ -1,7 +1,7 @@
 import Head from 'next/head';
 
 export async function getServerSideProps() {
-  const baseUrl = 'https://vercel.com/aarons-projects-9827ccd9/funfacts'; // Update with your actual base URL
+  const baseUrl = 'https://funfacts-xi.vercel.app/'; // Update with your actual base URL
   console.log('Base URL for initial frame:', baseUrl);
   return { props: { baseUrl } };
 }
