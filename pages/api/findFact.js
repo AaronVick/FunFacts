@@ -46,27 +46,21 @@ export default async function handler(req) {
 
         const backgroundColor = getRandomDarkColor();
 
-        const ogImageUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/api/findFact?${new URLSearchParams({
-          fact,
-          color: backgroundColor,
-        }).toString()}`;
-
         return new Response(
           `<!DOCTYPE html>
           <html>
             <head>
-              <title>Random Fun Fact</title>
-              <meta property="fc:frame" content="vNext" />
-              <meta property="fc:frame:image" content="${ogImageUrl}" />
-              <meta property="fc:frame:button:1" content="Find Another" />
-              <meta property="fc:frame:button:1:action" content="post" />
-              <meta property="fc:frame:button:2" content="Share" />
-              <meta property="fc:frame:button:2:action" content="link" />
-              <meta property="fc:frame:button:2:target" content="https://warpcast.com/compose?text=Enjoy some random fun facts. Frame by @aaronv.eth" />
+              <meta name="fc:frame" content="vNext" />
+              <meta name="fc:frame:image" content="${process.env.NEXT_PUBLIC_BASE_URL}/api/findFact" />
+              <meta name="fc:frame:button:1" content="Find Another" />
+              <meta name="fc:frame:button:1:action" content="post" />
+              <meta name="fc:frame:button:2" content="Share" />
+              <meta name="fc:frame:button:2:action" content="https://warpcast.com/compose?text=Enjoy%20some%20random%20fun%20facts.%20Frame%20by%20@aaronv.eth" />
             </head>
             <body>
-              <h1>Fun Fact</h1>
-              <p>Here’s your random fun fact: "${fact}"</p>
+              <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; width:100%; height:100%; background-color:${backgroundColor}; color:white; font-size:48px; font-weight:bold; padding:20px; text-align:center;">
+                ${fact}
+              </div>
             </body>
           </html>`,
           {
@@ -78,30 +72,25 @@ export default async function handler(req) {
       } else {
         throw new Error('Failed to fetch a valid fact');
       }
-
     } catch (error) {
       console.error('Error generating fun fact:', error);
 
       const placeholderImage = getRandomPlaceholderImage();
-      const ogImageUrl = placeholderImage;
 
       return new Response(
         `<!DOCTYPE html>
         <html>
           <head>
-            <title>Error</title>
-            <meta property="fc:frame" content="vNext" />
-            <meta property="fc:frame:image" content="${ogImageUrl}" />
-            <meta property="fc:frame:button:1" content="Try Again" />
-            <meta property="fc:frame:button:1:action" content="post" />
-            <meta property="fc:frame:button:2" content="Share" />
-            <meta property="fc:frame:button:2:action" content="link" />
-            <meta property="fc:frame:button:2:target" content="https://warpcast.com/compose?text=Enjoy some random fun facts. Frame by @aaronv.eth" />
+            <meta name="fc:frame" content="vNext" />
+            <meta name="fc:frame:image" content="${placeholderImage}" />
+            <meta name="fc:frame:button:1" content="Go Back" />
+            <meta name="fc:frame:button:1:action" content="post" />
           </head>
           <body>
-            <h1>Error</h1>
-            <p>An unexpected error occurred. Here’s a fun image instead!</p>
-            <img src="${ogImageUrl}" alt="Placeholder Image" style="max-width: 100%; height: auto;" />
+            <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; width:100%; height:100%; background-color:#2C3E50; color:white; font-size:24px; font-weight:bold; padding:20px; text-align:center;">
+              <img src="${placeholderImage}" alt="Placeholder" style="width:100%; height:auto;" />
+              <p>An unexpected error occurred. Here’s a fun image instead!</p>
+            </div>
           </body>
         </html>`,
         {
@@ -116,11 +105,10 @@ export default async function handler(req) {
       `<!DOCTYPE html>
       <html>
         <head>
-          <title>Method Not Allowed</title>
-          <meta property="fc:frame" content="vNext" />
-          <meta property="fc:frame:image" content="${process.env.NEXT_PUBLIC_BASE_URL}/error.png" />
-          <meta property="fc:frame:button:1" content="Go Back" />
-          <meta property="fc:frame:button:1:action" content="post" />
+          <meta name="fc:frame" content="vNext" />
+          <meta name="fc:frame:image" content="${process.env.NEXT_PUBLIC_BASE_URL}/error.png" />
+          <meta name="fc:frame:button:1" content="Go Back" />
+          <meta name="fc:frame:button:1:action" content="post" />
         </head>
         <body>
           <h1>Method Not Allowed</h1>
